@@ -152,53 +152,57 @@ async def complete_session(session_id: str, request: Request):
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    # 1. Force-complete the deliberation
-    session = await engine.force_complete(session_id)
+    try:
+        # 1. Force-complete the deliberation
+        session = await engine.force_complete(session_id)
 
-    # 2. Optionally fetch codebase analysis if linked
-    codebase = None
-    if session.codebase_id:
-        from backend.services.db import get_codebase_analysis
+        # 2. Optionally fetch codebase analysis if linked
+        codebase = None
+        if session.codebase_id:
+            from backend.services.db import get_codebase_analysis
 
-        codebase = await get_codebase_analysis(session.codebase_id)
+            codebase = await get_codebase_analysis(session.codebase_id)
 
-    # 3. Generate ticket specs from the refined session
-    tickets = await generator.generate(session, codebase)
+        # 3. Generate ticket specs from the refined session
+        tickets = await generator.generate(session, codebase)
 
-    # 4. Persist tickets & wire up dependency graph via TicketManager
-    created = await manager.create_tickets(session.id, tickets)
+        # 4. Persist tickets & wire up dependency graph via TicketManager
+        created = await manager.create_tickets(session.id, tickets)
 
-    # 5. Generate agent prompt
-    from backend.tickets.prompt_generator import generate_agent_prompt
-    session.agent_prompt = generate_agent_prompt(session, created, codebase)
+        # 5. Generate agent prompt
+        from backend.tickets.prompt_generator import generate_agent_prompt
+        session.agent_prompt = generate_agent_prompt(session, created, codebase)
 
-    # 6. Persist session
-    await save_session(session)
+        # 6. Persist session
+        await save_session(session)
 
-    # 6. Broadcast events
-    await ws_manager.broadcast(
-        WSEvent(
-            type=EventType.DELIBERATION_COMPLETE,
-            session_id=session_id,
-            data={
-                "refined_idea": session.refined_idea,
-                "key_insights": session.key_insights,
-                "risks": session.risks,
-            },
+        # 7. Broadcast events
+        await ws_manager.broadcast(
+            WSEvent(
+                type=EventType.DELIBERATION_COMPLETE,
+                session_id=session_id,
+                data={
+                    "refined_idea": session.refined_idea,
+                    "key_insights": session.key_insights,
+                    "risks": session.risks,
+                },
+            )
         )
-    )
-    await ws_manager.broadcast(
-        WSEvent(
-            type=EventType.TICKETS_GENERATED,
-            session_id=session_id,
-            data={
-                "ticket_count": len(created),
-                "ticket_ids": [t.id for t in created],
-            },
+        await ws_manager.broadcast(
+            WSEvent(
+                type=EventType.TICKETS_GENERATED,
+                session_id=session_id,
+                data={
+                    "ticket_count": len(created),
+                    "ticket_ids": [t.id for t in created],
+                },
+            )
         )
-    )
 
-    return session
+        return session
+    except Exception as e:
+        logger.exception("Failed to complete session %s", session_id)
+        raise HTTPException(status_code=500, detail=f"Completion failed: {e}")
 
 
 @router.post("/{session_id}/refine", response_model=SessionMessage)
