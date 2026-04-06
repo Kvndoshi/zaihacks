@@ -99,6 +99,20 @@ async def health():
     return {"status": "ok", "service": "friction", "vercel": _IS_VERCEL}
 
 
+@app.get("/api/debug/llm")
+async def debug_llm():
+    """Quick LLM smoke test — verifies Z.ai key and connectivity."""
+    try:
+        llm: LLMClient = app.state.llm
+        reply = await llm.chat_completion(
+            [{"role": "user", "content": "Say hello in exactly 5 words."}],
+            temperature=0.1,
+        )
+        return {"status": "ok", "reply": reply}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     ws_manager: ConnectionManager = app.state.ws_manager
