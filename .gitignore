@@ -1,0 +1,15 @@
+# Local/dev files that should not be committed
+backend/.env
+
+# Node dependencies / build artifacts
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Python bytecode
+**/__pycache__/
+*.pyc
+
+# Local database (contains runtime data)
+db/*.db
+

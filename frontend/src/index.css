@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --friction-amber: #f59e0b;
+  --friction-red: #ef4444;
+  --friction-dark: #0f0f0f;
+  --friction-darker: #080808;
+  --friction-surface: #1a1a1a;
+  --friction-border: #2a2a2a;
+}
+
+body {
+  background: var(--friction-dark);
+  color: #e5e5e5;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--friction-darker); }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+.amber-glow { text-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
+.amber-border-glow { box-shadow: 0 0 15px rgba(245, 158, 11, 0.15); }
+
+.react-flow__background { background: var(--friction-darker) !important; }
