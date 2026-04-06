@@ -124,4 +124,16 @@ class LLMClient:
                 role = "user"
             oai_messages.append({"role": role, "content": msg["content"]})
 
+        # GLM 5.1 requires the first non-system message to be from the user.
+        # Find the first non-system message and ensure it's a user message.
+        first_non_sys = next(
+            (i for i, m in enumerate(oai_messages) if m["role"] != "system"), None
+        )
+        if first_non_sys is not None and oai_messages[first_non_sys]["role"] != "user":
+            # Merge consecutive assistant messages or prepend a placeholder
+            oai_messages.insert(first_non_sys, {
+                "role": "user",
+                "content": "(User initiated the conversation.)",
+            })
+
         return oai_messages

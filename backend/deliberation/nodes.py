@@ -134,6 +134,10 @@ async def _run_phase_node(
     if not llm_messages:
         llm_messages = [{"role": "user", "content": state["idea"]}]
 
+    # Ensure conversation starts with a user message (GLM 5.1 requires it)
+    if llm_messages and llm_messages[0]["role"] != "user":
+        llm_messages.insert(0, {"role": "user", "content": state["idea"]})
+
     response = await llm.chat_completion(
         messages=llm_messages,
         system_prompt=system_prompt,
@@ -203,6 +207,9 @@ async def summarize_node(state: DeliberationState) -> dict[str, Any]:
     ]
     if not llm_messages:
         llm_messages = [{"role": "user", "content": state["idea"]}]
+    # Ensure conversation starts with a user message (GLM 5.1 requires it)
+    elif llm_messages[0]["role"] != "user":
+        llm_messages.insert(0, {"role": "user", "content": state["idea"]})
 
     try:
         summary = await llm.structured_output(
