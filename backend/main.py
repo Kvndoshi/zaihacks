@@ -96,7 +96,17 @@ app.include_router(status_router.router)
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "friction", "vercel": _IS_VERCEL}
+    import os as _os
+    return {
+        "status": "ok",
+        "service": "friction",
+        "vercel": _IS_VERCEL,
+        "static_dir": str(_STATIC_DIR),
+        "static_exists": _STATIC_DIR.is_dir(),
+        "cwd": _os.getcwd(),
+        "this_dir": str(_THIS_DIR),
+        "parent_ls": sorted(_os.listdir(_THIS_DIR.parent)) if _THIS_DIR.parent.is_dir() else [],
+    }
 
 
 @app.get("/api/debug/llm")
