@@ -132,7 +132,7 @@ class TicketGenerator:
             messages=[{"role": "user", "content": prompt}],
             system_prompt=_GENERATION_SYSTEM_PROMPT,
             temperature=0.4,
-            max_tokens=4000,
+            max_tokens=8000,
         )
 
         raw_tickets = raw.get("tickets", [])
@@ -142,7 +142,7 @@ class TicketGenerator:
                 messages=[{"role": "user", "content": prompt}],
                 system_prompt=_GENERATION_SYSTEM_PROMPT,
                 temperature=0.5,
-                max_tokens=4000,
+                max_tokens=8000,
             )
             raw_tickets = raw.get("tickets", [])
 
