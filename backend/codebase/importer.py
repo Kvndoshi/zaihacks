@@ -9,8 +9,6 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-import git  # gitpython
-
 from backend.models.codebase import FileInfo
 
 logger = logging.getLogger(__name__)
@@ -240,6 +238,8 @@ class CodebaseImporter:
 
         # gitpython clone is synchronous; run in executor to avoid blocking
         import asyncio
+
+        import git  # lazy import — git binary not available on Vercel
 
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(

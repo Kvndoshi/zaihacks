@@ -1,5 +1,10 @@
 """Vercel entrypoint — re-exports the FastAPI app."""
 
+import os
+
+# Suppress gitpython error when git binary is not available (Vercel serverless)
+os.environ.setdefault("GIT_PYTHON_REFRESH", "quiet")
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
