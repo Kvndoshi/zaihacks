@@ -60,11 +60,12 @@ projects, research initiatives, business operations, content creation, legal rev
 hiring plans, or anything else. Adapt your tickets to the nature of the work.
 
 RULES:
-1. Generate between 5 and 12 tickets organized into layers (0-4).
+1. Generate between 5 and 8 tickets organized into layers (0-4).
    IMPORTANT: Batch related small tasks into single tickets. For example, do NOT create
    separate tickets for individual functions like addition, subtraction, multiplication —
    combine them into one ticket like 'Implement core arithmetic operations'. Each ticket
    should represent a meaningful, independently completable unit of work, not a single task.
+   Keep descriptions concise (2-4 sentences). Do NOT over-explain.
    - Layer 0: foundational work with NO dependencies (research, setup, planning, schemas)
    - Layer 1: depends only on layer-0 tickets (core work, data models, initial drafts)
    - Layer 2: depends on layer-0 and/or layer-1 (integration, execution, business logic)
@@ -73,7 +74,7 @@ RULES:
 2. Each ticket MUST be SELF-CONTAINED. Include FULL context in the description.
    Never say "as discussed above", "see ticket X", or "the above".
    A person reading ONLY that ticket must know exactly what to do.
-3. Include 2-5 concrete, testable acceptance criteria per ticket.
+3. Include 2-3 concrete, testable acceptance criteria per ticket (one sentence each).
 4. For software/code tickets, list specific files_to_create and files_to_modify.
    For non-technical tickets (marketing, design, research, etc.), these can be empty arrays.
 5. Assign a domain from: backend, frontend, database, auth, api, testing, infra, docs, \

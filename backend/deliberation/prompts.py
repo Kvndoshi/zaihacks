@@ -253,56 +253,22 @@ IMPORTANT: Adapt the summary to the type of project. If the idea is \
 non-technical (marketing, design, research, operations, etc.), omit \
 "suggested_tech_stack" and use "suggested_approach" instead.
 
-Return this JSON structure (no markdown fences, no extra text):
+Return this JSON (no markdown fences, no extra text). Be concise — \
+one sentence per insight, one sentence per risk:
 
 {{
-  "refined_idea": "The idea as it stands after deliberation — 2-3 sentences \
-capturing what should actually be built or executed, incorporating the user's \
-best arguments and Friction's strongest challenges.",
-  "key_insights": [
-    "Insight 1 from the conversation",
-    "Insight 2...",
-    "..."
-  ],
+  "refined_idea": "2-3 sentence summary of what to build after deliberation.",
+  "key_insights": ["insight 1", "insight 2", "insight 3"],
   "top_risks": [
-    {{
-      "risk": "Description of the risk",
-      "severity": "high|medium|low",
-      "mitigation": "Suggested mitigation strategy"
-    }}
+    {{"risk": "one sentence", "severity": "high|medium|low", "mitigation": "one sentence"}}
   ],
-  "recommended_scope": "What should be in v1 — be specific about features \
-or deliverables to include",
-  "what_to_cut": [
-    "Feature or scope item to defer to v2",
-    "..."
-  ],
-  "suggested_tech_stack": {{
-    "backend": "...",
-    "frontend": "...",
-    "database": "...",
-    "other": "..."
-  }},
-  "suggested_approach": {{
-    "methodology": "Recommended approach, framework, or process",
-    "key_tools": "Tools, platforms, or services to use",
-    "team_structure": "Suggested roles or team organization",
-    "other": "Any other relevant strategic choices"
-  }},
-  "confidence_delta": {{
-    "user_scores": {{}},
-    "friction_scores": {{}},
-    "commentary": "Brief note on where user and Friction disagreed and why"
-  }}
+  "recommended_scope": "What v1 includes — 2-3 sentences max.",
+  "what_to_cut": ["item to defer"],
+  "suggested_tech_stack": {{"backend": "...", "frontend": "...", "database": "...", "other": "..."}},
+  "confidence_delta": {{"commentary": "One sentence on where user and Friction disagreed."}}
 }}
 
-NOTE: Include "suggested_tech_stack" for software/technical projects. \
-Include "suggested_approach" for non-technical projects. You may include \
-both if the project spans technical and non-technical work.
-
-Be honest in the summary. If the idea is strong, say so. If it has \
-fundamental problems that were not resolved, say that too. The user \
-deserves a clear-eyed assessment, not a participation trophy."""
+Be honest. Keep the entire JSON under 500 words."""
 
 
 # ---------------------------------------------------------------------------
