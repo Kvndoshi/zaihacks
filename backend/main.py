@@ -1,13 +1,13 @@
 """Friction — AI Deliberation Server.
 
-FastAPI application with WebSocket support, deliberation engine,
-ticket orchestration, and MCP-compatible agent interface.
-Serves the built frontend from frontend/dist/ as static files.
+FastAPI application with deliberation engine, ticket orchestration,
+and MCP-compatible agent interface. Deployed on Vercel with Fluid Compute.
 """
 
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
@@ -34,7 +34,9 @@ from backend.services.websocket_manager import ConnectionManager
 from backend.tickets.generator import TicketGenerator
 from backend.tickets.manager import TicketManager
 
-# Resolve frontend dist path relative to this file
+_IS_VERCEL = bool(os.environ.get("VERCEL"))
+
+# Resolve frontend dist path relative to this file (local dev only)
 _THIS_DIR = Path(__file__).resolve().parent
 _FRONTEND_DIST = _THIS_DIR.parent / "frontend" / "dist"
 
@@ -62,7 +64,7 @@ async def lifespan(app: FastAPI):
     app.state.issues_fetcher = GitHubIssuesFetcher()
     app.state.issue_ticket_generator = IssueTicketGenerator(llm)
 
-    logger.info("Friction server ready on http://%s:%d", config.SERVER_HOST, config.SERVER_PORT)
+    logger.info("Friction server ready")
     yield
     # Shutdown
     logger.info("Friction server shutting down.")
@@ -75,7 +77,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
+# CORS — allow all origins for deployed API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=config.CORS_ORIGINS,
@@ -94,7 +96,7 @@ app.include_router(status_router.router)
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "friction"}
+    return {"status": "ok", "service": "friction", "vercel": _IS_VERCEL}
 
 
 @app.websocket("/ws")
@@ -112,31 +114,25 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 # ---------------------------------------------------------------------------
-# Serve built frontend — static files + SPA catch-all
+# Local dev: Serve built frontend (Vercel serves from public/ automatically)
 # ---------------------------------------------------------------------------
-# Mount static assets at /assets if dist exists
-if _FRONTEND_DIST.is_dir() and (_FRONTEND_DIST / "assets").is_dir():
-    app.mount("/assets", StaticFiles(directory=str(_FRONTEND_DIST / "assets")), name="frontend_assets")
+if not _IS_VERCEL:
+    if _FRONTEND_DIST.is_dir() and (_FRONTEND_DIST / "assets").is_dir():
+        app.mount("/assets", StaticFiles(directory=str(_FRONTEND_DIST / "assets")), name="frontend_assets")
 
-
-@app.get("/{full_path:path}", include_in_schema=False)
-async def spa_catch_all(request: Request, full_path: str):
-    """Serve frontend files. API routes are matched first by FastAPI."""
-    if not _FRONTEND_DIST.is_dir():
-        return JSONResponse(
-            {"detail": "Frontend not built. Run: cd frontend && npm run build"},
-            status_code=404,
-        )
-
-    # Serve actual files from dist/ (e.g. favicon.ico, vite.svg)
-    if full_path:
-        file_path = _FRONTEND_DIST / full_path
-        if file_path.is_file():
-            return FileResponse(str(file_path))
-
-    # SPA fallback — serve index.html
-    index = _FRONTEND_DIST / "index.html"
-    if index.is_file():
-        return FileResponse(str(index))
-
-    return JSONResponse({"detail": "Not found"}, status_code=404)
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_catch_all(request: Request, full_path: str):
+        """Serve frontend files. API routes are matched first by FastAPI."""
+        if not _FRONTEND_DIST.is_dir():
+            return JSONResponse(
+                {"detail": "Frontend not built. Run: cd frontend && npm run build"},
+                status_code=404,
+            )
+        if full_path:
+            file_path = _FRONTEND_DIST / full_path
+            if file_path.is_file():
+                return FileResponse(str(file_path))
+        index = _FRONTEND_DIST / "index.html"
+        if index.is_file():
+            return FileResponse(str(index))
+        return JSONResponse({"detail": "Not found"}, status_code=404)

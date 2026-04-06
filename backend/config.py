@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+import os
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Detect Vercel serverless environment
+_IS_VERCEL = bool(os.environ.get("VERCEL"))
+_DEFAULT_DB = "/tmp/friction.db" if _IS_VERCEL else "db/friction.db"
 
 
 class Settings(BaseSettings):
@@ -15,9 +21,9 @@ class Settings(BaseSettings):
 
     ZAI_API_KEY: str = Field(default="", description="Z.ai API key for GLM 5.1")
     LLM_MODEL: str = Field(default="glm-5.1", description="GLM model name")
-    DB_PATH: str = Field(default="db/friction.db", description="SQLite database path")
+    DB_PATH: str = Field(default=_DEFAULT_DB, description="SQLite database path")
     CORS_ORIGINS: list[str] = Field(
-        default=["http://localhost:5173"],
+        default=["*"],
         description="Allowed CORS origins",
     )
     MAX_DELIBERATION_TURNS: int = Field(

@@ -30,7 +30,7 @@ from mcp.types import TextContent, Tool
 
 logger = logging.getLogger(__name__)
 
-_BASE_URL = os.getenv("FRICTION_API_BASE", "http://localhost:3001")
+_BASE_URL = os.getenv("FRICTION_API_BASE", "https://xaihack.vercel.app")
 FRICTION_API_URL = _BASE_URL + "/api"
 FRICTION_DASHBOARD_URL = _BASE_URL
 

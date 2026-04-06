@@ -13,3 +13,4 @@ frontend/dist/
 # Local database (contains runtime data)
 db/*.db
 
+.vercel
