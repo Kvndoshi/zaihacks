@@ -136,25 +136,29 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 # ---------------------------------------------------------------------------
-# Local dev: Serve built frontend (Vercel serves from public/ automatically)
+# Serve built frontend — local dev uses frontend/dist, Vercel uses public/
 # ---------------------------------------------------------------------------
-if not _IS_VERCEL:
-    if _FRONTEND_DIST.is_dir() and (_FRONTEND_DIST / "assets").is_dir():
-        app.mount("/assets", StaticFiles(directory=str(_FRONTEND_DIST / "assets")), name="frontend_assets")
+_STATIC_DIR = (
+    _THIS_DIR.parent / "public" if _IS_VERCEL else _FRONTEND_DIST
+)
 
-    @app.get("/{full_path:path}", include_in_schema=False)
-    async def spa_catch_all(request: Request, full_path: str):
-        """Serve frontend files. API routes are matched first by FastAPI."""
-        if not _FRONTEND_DIST.is_dir():
-            return JSONResponse(
-                {"detail": "Frontend not built. Run: cd frontend && npm run build"},
-                status_code=404,
-            )
-        if full_path:
-            file_path = _FRONTEND_DIST / full_path
-            if file_path.is_file():
-                return FileResponse(str(file_path))
-        index = _FRONTEND_DIST / "index.html"
-        if index.is_file():
-            return FileResponse(str(index))
-        return JSONResponse({"detail": "Not found"}, status_code=404)
+if _STATIC_DIR.is_dir() and (_STATIC_DIR / "assets").is_dir():
+    app.mount("/assets", StaticFiles(directory=str(_STATIC_DIR / "assets")), name="frontend_assets")
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def spa_catch_all(request: Request, full_path: str):
+    """Serve frontend files. API routes are matched first by FastAPI."""
+    if not _STATIC_DIR.is_dir():
+        return JSONResponse(
+            {"detail": "Frontend not built. Run: cd frontend && npm run build"},
+            status_code=404,
+        )
+    if full_path:
+        file_path = _STATIC_DIR / full_path
+        if file_path.is_file():
+            return FileResponse(str(file_path))
+    index = _STATIC_DIR / "index.html"
+    if index.is_file():
+        return FileResponse(str(index))
+    return JSONResponse({"detail": "Not found"}, status_code=404)
