@@ -96,39 +96,8 @@ app.include_router(status_router.router)
 
 @app.get("/api/health")
 async def health():
-    import os as _os
-    return {
-        "status": "ok",
-        "service": "friction",
-        "vercel": _IS_VERCEL,
-        "static_dir": str(_STATIC_DIR),
-        "static_exists": _STATIC_DIR.is_dir(),
-        "cwd": _os.getcwd(),
-        "this_dir": str(_THIS_DIR),
-        "parent_ls": sorted(_os.listdir(_THIS_DIR.parent)) if _THIS_DIR.parent.is_dir() else [],
-    }
+    return {"status": "ok", "service": "friction", "vercel": _IS_VERCEL}
 
-
-@app.get("/api/debug/llm")
-async def debug_llm():
-    """Quick LLM smoke test — verifies Z.ai key and connectivity."""
-    import traceback
-    try:
-        llm: LLMClient = app.state.llm
-        reply = await llm.chat_completion(
-            [{"role": "user", "content": "Say hello in exactly 5 words."}],
-            temperature=0.1,
-        )
-        return {"status": "ok", "reply": reply}
-    except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e),
-            "type": type(e).__name__,
-            "traceback": traceback.format_exc(),
-            "api_key_set": bool(config.ZAI_API_KEY),
-            "api_key_prefix": config.ZAI_API_KEY[:8] if config.ZAI_API_KEY else "EMPTY",
-        }
 
 
 @app.websocket("/ws")
@@ -149,7 +118,7 @@ async def websocket_endpoint(websocket: WebSocket):
 # Serve built frontend — local dev uses frontend/dist, Vercel uses public/
 # ---------------------------------------------------------------------------
 _STATIC_DIR = (
-    _THIS_DIR.parent / "public" if _IS_VERCEL else _FRONTEND_DIST
+    _THIS_DIR.parent / "static_frontend" if _IS_VERCEL else _FRONTEND_DIST
 )
 
 if _STATIC_DIR.is_dir() and (_STATIC_DIR / "assets").is_dir():
