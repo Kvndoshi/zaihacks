@@ -153,8 +153,12 @@ async def complete_session(session_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Session not found")
 
     try:
-        # 1. Force-complete the deliberation
-        session = await engine.force_complete(session_id)
+        # 1. Force-complete the deliberation (skip if already completed)
+        if session.status.value != "completed":
+            session = await engine.force_complete(session_id)
+        else:
+            # Already completed — just re-fetch latest
+            session = await get_session(session_id)
 
         # 2. Optionally fetch codebase analysis if linked
         codebase = None
