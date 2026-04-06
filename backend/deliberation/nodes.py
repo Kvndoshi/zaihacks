@@ -227,14 +227,22 @@ async def summarize_node(state: DeliberationState) -> dict[str, Any]:
         )
         summary = {"raw_summary": raw}
 
-    # Extract fields from summary into state
+    # Extract fields from summary into state (handle malformed responses)
+    if not isinstance(summary, dict):
+        summary = {"raw_summary": str(summary)}
     key_insights = summary.get("key_insights", state.get("key_insights", []))
+    if isinstance(key_insights, str):
+        key_insights = [key_insights]
     risks_raw = summary.get("top_risks", [])
+    if isinstance(risks_raw, str):
+        risks_raw = [risks_raw]
     risks = [
         r["risk"] if isinstance(r, dict) else str(r)
         for r in risks_raw
     ]
     refined_idea = summary.get("refined_idea", state.get("refined_idea", state["idea"]))
+    if not isinstance(refined_idea, str):
+        refined_idea = str(refined_idea)
 
     # Append a human-readable summary message for the conversation
     summary_text = _format_summary_for_display(summary)

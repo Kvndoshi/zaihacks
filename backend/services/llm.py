@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 class LLMClient:
     """Thin wrapper around Z.ai's OpenAI-compatible GLM 5.1 API."""
 
-    def __init__(self, api_key: str | None = None, model: str = "glm-5.1"):
+    def __init__(self, api_key: str | None = None, model: str | None = None):
         self._api_key = (api_key or config.ZAI_API_KEY).strip()
-        self._model_name = model
+        self._model_name = model or config.LLM_MODEL
         self._client = AsyncOpenAI(
             api_key=self._api_key,
             base_url="https://api.z.ai/api/coding/paas/v4/",

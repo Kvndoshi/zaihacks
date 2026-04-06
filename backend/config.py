@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     )
 
     ZAI_API_KEY: str = Field(default="", description="Z.ai API key for GLM 5.1")
-    LLM_MODEL: str = Field(default="glm-5.1", description="GLM model name")
+    LLM_MODEL: str = Field(default="glm-4.5-air", description="GLM model name")
     DB_PATH: str = Field(default=_DEFAULT_DB, description="SQLite database path")
     CORS_ORIGINS: list[str] = Field(
         default=["*"],
