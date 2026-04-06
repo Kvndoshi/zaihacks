@@ -2,23 +2,43 @@
 
 > "The AI that debates your idea, then builds the plan that survives the debate."
 
-**Friction** is an AI deliberation engine powered by **GLM 5.1** that pressure-tests project ideas through structured multi-phase debate before generating implementation tickets. It replaces the "just start building" impulse with a rigorous thinking process — probing, challenging assumptions, running premortems — then produces a dependency-aware ticket DAG that agents can execute.
+**Friction** is an AI deliberation engine powered by **GLM 5.1** that pressure-tests project ideas through structured multi-phase debate before generating implementation tickets. It replaces the "just start building" impulse with a rigorous thinking process — probing, challenging assumptions, running premortems — then produces a dependency-aware ticket DAG that coding agents can execute autonomously.
 
-Built for the [Z.ai Builder Series](https://z.ai) hackathon (March 30 - April 6, 2026).
+**Live Demo:** [https://zaihack.vercel.app](https://zaihack.vercel.app)
+
+Built for the [Z.ai Builder Series](https://z.ai) hackathon (March 30 – April 6, 2026).
 
 ---
 
-## Why GLM 5.1?
+## What It Does & Who It's For
 
-Friction is a **long-horizon, multi-step reasoning system** — exactly the kind of workload GLM 5.1 excels at:
+Friction solves the #1 failure mode of software projects: **building the wrong thing**. Most developers jump straight from idea to code. Friction forces a structured debate first.
 
-1. **Multi-phase deliberation (6 phases, 12+ LLM calls per session)**: Each deliberation runs through probing, requirements elicitation, cognitive forcing, devil's advocate challenge, premortem analysis, and structured summarization. GLM 5.1's strong agentic reasoning (85.0 avg on agent leaderboard) handles the nuanced back-and-forth where the AI must remember context, adjust its stance when the user makes strong arguments, and maintain coherent challenge across phases.
+**For solo developers** who start building before thinking and end up rebuilding. **For hackathon teams** who need to rapidly validate ideas and split work. **For AI agent users** who want their coding agents to work from well-reasoned tickets instead of vague prompts.
 
-2. **Structured output generation**: After deliberation, GLM 5.1 generates a complex JSON structure containing refined ideas, categorized risks with severity/mitigation, recommended scope, tech stack suggestions, and confidence deltas. The model's instruction-following ensures clean, parseable JSON output consistently.
+### The Flow
 
-3. **Tool use / Agent behavior via MCP**: The MCP server exposes Friction as a tool suite for coding agents (Cursor, Claude Code, etc.). Agents call `start_deliberation` → debate in the browser → `get_agent_prompt` → `get_next_ticket` → `mark_done` in a fully agentic workflow. GLM 5.1's tool-use capabilities make it reliable for generating the structured ticket data that downstream agents consume.
+1. You pitch an idea → Friction **probes** with sharp questions
+2. It elicits **requirements** and **forces you to rate your confidence** before revealing its own assessment
+3. It plays **devil's advocate**, citing real competitors via web search
+4. It runs a **premortem** — "It's 6 months later and this failed. Why?"
+5. It generates a **structured summary** with refined idea, risks, and scope
+6. It produces **5-12 layered tickets** with a dependency DAG
+7. Coding agents (Cursor, Claude Code) consume tickets via **MCP** and build autonomously
 
-4. **Bug-aware ticket patching**: When a completed ticket reports issues, GLM 5.1 analyzes the upstream bug reports and patches downstream ticket descriptions with context-aware warnings — a multi-step reasoning task that requires understanding dependency chains and synthesizing failure information.
+---
+
+## How GLM 5.1 Is Used (and Why)
+
+Friction is a **long-horizon, multi-step reasoning system** — exactly the kind of workload GLM 5.1 excels at. It's not a single API call; every session makes **12+ sequential LLM calls** across 6 deliberation phases, each building on the full conversation context.
+
+**Multi-phase deliberation**: Each session runs through probing → requirements → cognitive forcing → devil's advocate → premortem → summary. GLM 5.1's strong agentic reasoning handles the nuanced back-and-forth where the AI must remember context across phases, adjust its stance when the user makes strong arguments, and maintain coherent challenge throughout.
+
+**Structured output generation**: After deliberation, GLM 5.1 generates complex JSON containing refined ideas, categorized risks with severity/mitigation, recommended scope, tech stack suggestions, and confidence deltas — then a second call generates 5-12 layered tickets with dependency graphs. The model's instruction-following ensures clean, parseable JSON output consistently.
+
+**Tool use / Agent behavior via MCP**: The MCP server exposes Friction as a tool suite for coding agents. Agents call `get_next_ticket` → implement → `mark_done` in a fully agentic workflow. GLM 5.1's tool-use capabilities make it reliable for generating the structured ticket data that downstream agents consume.
+
+**Bug-aware ticket patching**: When a completed ticket reports issues, GLM 5.1 analyzes upstream bug reports and patches downstream ticket descriptions with context-aware warnings — a multi-step reasoning task requiring understanding of dependency chains.
 
 ---
 
@@ -61,42 +81,35 @@ Friction is a **long-horizon, multi-step reasoning system** — exactly the kind
                                     +------------------+
 ```
 
-### System Flow
+### Deliberation Flow (6 Phases)
 
-1. **User pitches idea** via the React dashboard or MCP tool
-2. **Deliberation Engine** (LangGraph state machine) runs 6 phases:
-   - **Probing** — Sharp questions about differentiation, target user, scope
-   - **Requirements** — Concrete scope, tech stack, integrations
-   - **Cognitive Forcing** — User rates confidence BEFORE seeing AI's scores (prevents anchoring bias)
-   - **Challenge** — Devil's advocate with real competitor data (web search enriched)
-   - **Premortem** — "It's 6 months later and this failed. Why?"
-   - **Summary** — Structured JSON: refined idea, risks, scope, confidence delta
-3. **Ticket Generation** — GLM 5.1 produces 5-12 layered tickets with dependency DAG
-4. **Ticket Orchestration** — Agents claim tickets atomically, complete with output summaries
-5. **Bug-aware patching** — Downstream tickets auto-patch based on upstream bug reports
-
-### Key Design Decisions
-
-- **Single LLM abstraction** (`backend/services/llm.py`): All GLM 5.1 calls go through one client — chat, structured output, and streaming
-- **LangGraph for deliberation flow**: State machine with conditional routing ensures phases progress correctly
-- **Atomic ticket claiming**: Lock-based concurrency prevents two agents from grabbing the same ticket
-- **Self-contained tickets**: Every ticket includes full context — no "see ticket X" references
+```
+ Idea → [Probing] → [Requirements] → [Cognitive Forcing] → [Challenge] → [Premortem] → [Summary]
+                                                                                           |
+                                                                                    Ticket Generation
+                                                                                           |
+                                                                              [5-12 Layered Tickets]
+                                                                                           |
+                                                                                  Dependency DAG
+                                                                                           |
+                                                                              Agent executes via MCP
+```
 
 ---
 
 ## Quick Start
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.12+
 - Node.js 18+
-- Z.ai API key with GLM Coding Plan
+- Z.ai API key ([get one here](https://z.ai))
 
 ### Backend
 ```bash
 cd backend
 cp .env.template .env
-# Edit .env and add your ZAI_API_KEY
-pip install -r requirements.txt
+# Edit .env → add your ZAI_API_KEY
+pip install -e ..    # installs from pyproject.toml
 cd .. && python -m backend.run
 # Server starts on http://localhost:8080
 ```
@@ -138,7 +151,8 @@ Add to your agent's MCP config:
 | Frontend | React 18, Vite, TypeScript, ReactFlow, Zustand, Tailwind CSS |
 | Database | SQLite with JSON columns |
 | Agent Protocol | MCP (Model Context Protocol) via stdio |
-| Web Search | DuckDuckGo (for grounding deliberation in real data) |
+| Web Search | DuckDuckGo (for grounding deliberation in real competitor data) |
+| Deployment | Vercel (Fluid Compute for Python) |
 
 ---
 
@@ -153,15 +167,6 @@ Add to your agent's MCP config:
 | PATCH | `/api/tickets/{id}` | Update ticket (complete/fail) |
 | GET | `/api/sessions/{id}/workflow` | Dependency graph |
 | WS | `/ws` | Real-time events |
-
----
-
-## Who Is This For?
-
-- **Solo developers** who start building before thinking and end up rebuilding
-- **Hackathon teams** who need to rapidly validate ideas and split work
-- **Engineering managers** who want structured ideation before sprint planning
-- **AI agent users** who want their coding agents to work from well-reasoned tickets instead of vague prompts
 
 ---
 

@@ -33,15 +33,20 @@ class LLMClient:
         messages: list[dict[str, str]],
         system_prompt: str = "",
         temperature: float = 0.7,
+        max_tokens: int | None = None,
     ) -> str:
         """Send a multi-turn chat and return the assistant reply as a string."""
         oai_messages = self._build_messages(messages, system_prompt)
 
-        response = await self._client.chat.completions.create(
+        kwargs: dict[str, Any] = dict(
             model=self._model_name,
             messages=oai_messages,
             temperature=temperature,
         )
+        if max_tokens:
+            kwargs["max_tokens"] = max_tokens
+
+        response = await self._client.chat.completions.create(**kwargs)
         return response.choices[0].message.content or ""
 
     async def structured_output(
@@ -50,6 +55,7 @@ class LLMClient:
         system_prompt: str = "",
         response_schema: dict[str, Any] | None = None,
         temperature: float = 0.3,
+        max_tokens: int | None = None,
     ) -> dict[str, Any]:
         """Return a parsed JSON object from the LLM."""
         json_instruction = (
@@ -59,7 +65,8 @@ class LLMClient:
         full_system = (system_prompt or "") + json_instruction
 
         raw = await self.chat_completion(
-            messages, system_prompt=full_system, temperature=temperature
+            messages, system_prompt=full_system, temperature=temperature,
+            max_tokens=max_tokens,
         )
 
         # Strip markdown fences if the model adds them anyway

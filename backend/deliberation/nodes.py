@@ -94,6 +94,7 @@ async def _run_phase_node(
     state: DeliberationState,
     prompt_template: str,
     temperature: float = 0.7,
+    max_tokens: int = 600,
 ) -> dict[str, Any]:
     """Generic helper: fill the prompt, call the LLM, append the response.
 
@@ -137,6 +138,7 @@ async def _run_phase_node(
         messages=llm_messages,
         system_prompt=system_prompt,
         temperature=temperature,
+        max_tokens=max_tokens,
     )
 
     updated_messages = list(state["messages"]) + [
@@ -207,6 +209,7 @@ async def summarize_node(state: DeliberationState) -> dict[str, Any]:
             messages=llm_messages,
             system_prompt=system_prompt,
             temperature=0.3,
+            max_tokens=2000,
         )
     except (json.JSONDecodeError, Exception) as exc:
         logger.warning("Structured output failed, falling back to text: %s", exc)
