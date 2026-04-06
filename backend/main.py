@@ -102,6 +102,7 @@ async def health():
 @app.get("/api/debug/llm")
 async def debug_llm():
     """Quick LLM smoke test — verifies Z.ai key and connectivity."""
+    import traceback
     try:
         llm: LLMClient = app.state.llm
         reply = await llm.chat_completion(
@@ -110,7 +111,14 @@ async def debug_llm():
         )
         return {"status": "ok", "reply": reply}
     except Exception as e:
-        return {"status": "error", "error": str(e)}
+        return {
+            "status": "error",
+            "error": str(e),
+            "type": type(e).__name__,
+            "traceback": traceback.format_exc(),
+            "api_key_set": bool(config.ZAI_API_KEY),
+            "api_key_prefix": config.ZAI_API_KEY[:8] if config.ZAI_API_KEY else "EMPTY",
+        }
 
 
 @app.websocket("/ws")
